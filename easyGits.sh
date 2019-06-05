@@ -42,3 +42,56 @@ upload()
         echo -e "\e[0m"
     fi
 }
+
+
+#get the statistics of the sub git in the Directory Tree
+stat_All_Sub (){
+find $1 -name .git -type d -execdir tput setaf 11 \; -execdir pwd \; -execdir git status \;
+}
+
+#get the statistics of the sub git in the Directory Tree
+stat_All_SubBra(){
+#find $1 -name .git -type d -execdir tput setaf 11 \; -execdir pwd \; -execdir git --color=always his  -1 \; -execdir git  --color=always status \;
+find $1 -name .git -type d -execdir tput setaf 11 \; -execdir pwd \; -execdir git his  -1 \;
+}
+
+#go to the project directory
+proj(){
+grep $1 /x/.repo/manifests/master.xml | sed 's/.*path\=\"/\/x\//'| sed 's/".*//'
+}
+
+stat_All(){
+stat_All_Sub | hi '' 'working tree clean' '' 'Not currently on any branch.' '' "noth.*\,"
+}
+
+# get the gerrit info on the console
+gerritInfo(){
+ ssh -p 29418 uidh4821@buic-scm-rbg.contiwan.com gerrit query $1
+}
+
+#Seach though  the specified Deirectory for the Branch name given, if it already exist
+findBra()
+{
+    echo -e "\e[38;5;110m looking for gits with\e[38;5;154m $1 \e[38;5;110mBranch Name \e[0m"
+    fine=$(find /x/Tresos/ /x/Misc/ -name *.git)
+    for gitle in $fine
+    do
+        if [ "$gitle" != "" ]; then
+            # Do something here
+            gitle=$(echo $gitle | sed -e 's/\.git.*//g'| sed -e 's/\n//')
+            cd $gitle
+            gitleBranch=$(git branch -v | grep $1)
+            if [ "$gitleBranch" != "" ]; then
+                #found the branch here
+                shaSha=$(echo $gitleBranch| sed -r 's/^\**[ ]*$1[ ]*//' | perl -pe 's/([a-f0-9]+).*/$1/')
+                echo -e "\n\e[38;5;154m path:\e[0m \e[38;5;187m$gitle\e[0m commitID $shaSha"
+                gitLog=$(git log --oneline -1 | grep --color=always $shaSha)
+                if [ "$gitLog" != "" ]; then
+                    echo -e "\e[38;5;154m      ==> log: \e[0m$gitLog \e[0m"
+                else
+                    echo -e "\e[38;5;215m     ==> Not yet checked out! \e[0m"
+                fi
+            fi
+        fi
+    done
+}
